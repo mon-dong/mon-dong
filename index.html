@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>萌動角落</title>
+    <!-- 1. 確保 SDK 放在最前面 -->
     <script src="https://line-scdn.net"></script>
     <script src="https://tailwindcss.com"></script>
     <style>
         @import url('https://googleapis.com');
         body { background: #fdfaf5; color: #2d4a22; }
         .serif { font-family: 'Noto Serif TC', serif; }
-        .grid-img { filter: grayscale(100%) opacity(0.2); width: 100%; height: 100%; object-fit: contain; }
+        .grid-img { filter: grayscale(100%) opacity(0.2); width: 100%; height: 100%; object-fit: contain; transition: 0.5s; }
         .grid-img.unlocked { filter: grayscale(0%) opacity(1); }
         .hidden { display: none; }
     </style>
@@ -24,8 +25,8 @@
     <!-- 捕捉視窗 -->
     <div id="scan-view" class="hidden max-w-sm mx-auto p-6 text-center">
         <h2 id="species-name" class="serif text-3xl mb-1">---</h2>
-        <div class="bg-white border-2 border-[#2d4a22] rounded-[32px] p-8 mb-6 shadow-xl">
-            <img id="species-img" src="" class="w-48 h-48 mx-auto object-contain">
+        <div class="bg-white border-2 border-[#2d4a22] rounded-[32px] p-8 mb-6 shadow-xl flex items-center justify-center">
+            <img id="species-img" src="" class="w-48 h-48 object-contain">
         </div>
         <div id="status-msg" class="text-xs mb-8 text-stone-500 bg-white/50 p-4 rounded-xl border border-dashed border-stone-300">
             🔍 偵測生物波長中...
@@ -42,7 +43,7 @@
 
     <!-- 長條閱讀器 -->
     <div id="reading-overlay" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
-        <button onclick="closeReader()" class="fixed top-6 right-6 bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center">✕</button>
+        <button onclick="closeReader()" class="fixed top-6 right-6 bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold">✕</button>
         <div class="flex flex-col items-center">
             <img id="comic-full-img" src="" class="w-full h-auto">
             <div class="p-10 bg-[#fdfaf5] w-full border-t-4 border-[#2d4a22]">
@@ -54,8 +55,8 @@
 
     <!-- 圖鑑主頁 -->
     <div id="collection-view" class="max-w-md mx-auto px-6">
-        <div class="flex justify-between items-end mb-6 border-b-2 border-[#2d4a22] pb-2 font-bold italic">
-            <h3 class="serif text-xl">我的圖鑑</h3>
+        <div class="flex justify-between items-end mb-6 border-b-2 border-[#2d4a22] pb-2 font-bold">
+            <h3 class="serif text-xl italic">我的圖鑑</h3>
             <span id="progress-text" class="text-xs bg-[#2d4a22] text-white px-2 py-0.5 rounded">0/2</span>
         </div>
         <div id="collection-grid" class="grid grid-cols-2 gap-4"></div>
@@ -65,7 +66,6 @@
         const LIFF_ID = "2009975666-bAjGYenl";
         const GITHUB_URL = "https://github.io";
 
-        // 直接把資料塞進去，不讀外部 JSON
         const speciesDB = {
             "psilotum": { 
                 name: "松葉蕨", latin: "Psilotum nudum", check: true, lat: 24.1392, lng: 120.6657, 
@@ -81,18 +81,32 @@
             }
         };
 
-        async function init() {
+        // 2. 強化版初始化：確保 liff 已定義
+        function startApp() {
+            if (typeof liff !== 'undefined') {
+                initLIFF();
+            } else {
+                console.log("等待 LIFF SDK...");
+                setTimeout(startApp, 100);
+            }
+        }
+
+        async function initLIFF() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) { liff.login(); return; }
-                
-                renderGrid();
-                const target = new URLSearchParams(window.location.search).get('species');
-                if (target && speciesDB[target]) {
-                    document.getElementById('collection-view').classList.add('hidden');
-                    showScanView(target);
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    renderGrid();
+                    const target = new URLSearchParams(window.location.search).get('species');
+                    if (target && speciesDB[target]) {
+                        document.getElementById('collection-view').classList.add('hidden');
+                        showScanView(target);
+                    }
                 }
-            } catch (err) { alert("LIFF 錯誤: " + err.message); }
+            } catch (err) {
+                console.error("LIFF 初始化失敗", err);
+            }
         }
 
         function showScanView(id) {
@@ -148,7 +162,7 @@
                 if (isFound) count++;
                 const s = speciesDB[key];
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-3xl border border-stone-100 text-center";
+                card.className = "bg-white p-4 rounded-3xl border border-stone-100 text-center cursor-pointer";
                 card.onclick = () => { if(isFound) {
                     const params = new URLSearchParams(window.location.search);
                     params.set('species', key);
@@ -160,7 +174,9 @@
             });
             document.getElementById('progress-text').innerText = count + "/2";
         }
-        init();
+
+        // 啟動程式
+        startApp();
     </script>
 </body>
 </html>
