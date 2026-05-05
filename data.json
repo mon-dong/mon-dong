@@ -2,7 +2,6 @@
   "psilotum": {
     "name": "松葉蕨",
     "latin": "Psilotum nudum",
-    "cat": "遠古類群",
     "check": true,
     "lat": 24.1392,
     "lng": 120.6657,
@@ -13,88 +12,9 @@
   "apis": {
     "name": "西洋蜂",
     "latin": "Apis mellifera",
-    "cat": "社會昆蟲",
     "check": false,
     "img": "apis_char.png",
     "comic": "apis_com.png",
     "infoFile": "apis_info.txt"
-  },
-  "termites": {
-    "name": "台灣土白蟻",
-    "latin": "Odontotermes formosanus",
-    "cat": "地下農夫",
-    "check": false,
-    "img": "termites_char.png",
-    "comic": "termites_com.png",
-    "infoFile": "termites_info.txt"
-  },
-  "spider": {
-    "name": "安德遜蠅虎",
-    "latin": "Hasarius adansoni",
-    "cat": "跳躍獵人",
-    "check": false,
-    "img": "spider_char.png",
-    "comic": "spider_com.png",
-    "infoFile": "spider_info.txt"
-  },
-  "dandelion": {
-    "name": "西洋蒲公英",
-    "latin": "Taraxacum officinale",
-    "cat": "冒險種子",
-    "check": true,
-    "lat": 24.1501,
-    "lng": 120.6644,
-    "img": "dandelion_char.png",
-    "comic": "dandelion_com.png",
-    "infoFile": "dandelion_info.txt"
-  },
-  "termite2": {
-    "name": "新渡戶歪白蟻",
-    "latin": "Pericapritermes nitobei",
-    "cat": "彈指兵蟻",
-    "check": false,
-    "img": "termite2_char.png",
-    "comic": "termite2_com.png",
-    "infoFile": "termite2_info.txt"
-  },
-  "barringtonia": {
-    "name": "穗花棋盤腳",
-    "latin": "Barringtonia racemosa",
-    "cat": "夏夜煙火",
-    "check": true,
-    "lat": 24.1555,
-    "lng": 120.6601,
-    "img": "barringtonia_char.png",
-    "comic": "barringtonia_com.png",
-    "infoFile": "barringtonia_info.txt"
-  },
-  "ficus": {
-    "name": "榕樹",
-    "latin": "Ficus microcarpa",
-    "cat": "都市守護者",
-    "check": false,
-    "img": "ficus_char.png",
-    "comic": "ficus_com.png",
-    "infoFile": "ficus_info.txt"
-  },
-  "wasp": {
-    "name": "榕果小蜂",
-    "latin": "Eupristina verticillata",
-    "cat": "絕對共生",
-    "check": true,
-    "lat": 24.1450,
-    "lng": 120.6620,
-    "img": "wasp_char.png",
-    "comic": "wasp_com.png",
-    "infoFile": "wasp_info.txt"
-  },
-  "bougainvillea": {
-    "name": "九重葛",
-    "latin": "Bougainvillea spectabilis",
-    "cat": "多彩苞片",
-    "check": false,
-    "img": "bougainvillea_char.png",
-    "comic": "bougainvillea_com.png",
-    "infoFile": "bougainvillea_info.txt"
   }
 }
