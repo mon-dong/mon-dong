@@ -72,89 +72,117 @@
     </div>
 
     <script>
-        const LIFF_ID = "2009975666-bAjGYenl";
-        const speciesDB = {
-            "psilotum": { 
-                name: "松葉蕨", latin: "Psilotum nudum", check: true, lat: 24.1392, lng: 120.6657, 
-                img: "psilotum_char.png.JPG", 
-                comic: "psilotum_com.png.png",
-                info: "我是最原始的維管束植物，長得像綠色掃帚，其實我沒有真正的根和葉子，完全靠地下莖吸收水分喔！"
-            },
-            "apis": { name: "西洋蜂", latin: "Apis mellifera", check: false, img: "https://placeholder.com", comic: "#", info: "西洋蜂是社會性昆蟲，是都市花圃中最常見的授粉者。" }
-            // 其他 8 隻請依此類推...
-        };
+    const LIFF_ID = "2009975666-bAjGYenl";
+    const BASE_URL = "https://github.io"; // 你的 GitHub 基礎路徑
 
-        async function init() {
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) liff.login();
-                document.getElementById('loading').remove();
-                
-                const target = new URLSearchParams(window.location.search).get('species');
-                if (target && speciesDB[target]) {
-                    document.getElementById('collection-view').classList.add('hidden');
-                    showScanView(target);
-                }
-                renderGrid();
-            } catch (e) { console.error(e); }
+    const speciesDB = {
+        "psilotum": { 
+            name: "松葉蕨", latin: "Psilotum nudum", check: true, lat: 24.1392, lng: 120.6657, 
+            img: "psilotum_char.png.JPG", 
+            comic: "psilotum_com.png.png",
+            info: "我是最原始的維管束植物，長得像綠色掃帚。我沒有真正的根和葉子，完全靠地下莖吸收水分喔！"
+        },
+        "apis": { 
+            name: "西洋蜂", latin: "Apis mellifera", check: false, 
+            img: "https://placeholder.com", 
+            comic: "#", 
+            info: "社會性昆蟲，是都市中最重要的粉媒者。" 
         }
+    };
 
-        function showScanView(id) {
-            const s = speciesDB[id];
-            document.getElementById('scan-view').classList.remove('hidden');
-            document.getElementById('species-name').innerText = s.name;
-            document.getElementById('species-latin').innerText = s.latin;
-            document.getElementById('species-img').src = s.img;
-            document.getElementById('species-info').innerText = s.info;
-            document.getElementById('comic-link').href = s.comic;
+    async function init() {
+        try {
+            await liff.init({ liffId: LIFF_ID });
+            if (!liff.isLoggedIn()) liff.login();
+            document.getElementById('loading').style.display = 'none';
             
-            if (!s.check) document.getElementById('status-msg').innerText = "✨ 此處生物信號強烈，可直接收錄。";
-        }
-
-        function checkLocation() {
-            const id = new URLSearchParams(window.location.search).get('species') || 'psilotum';
-            const s = speciesDB[id];
-            if (!s.check) return saveData(id);
-
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const dist = Math.sqrt(Math.pow(pos.coords.latitude - s.lat, 2) + Math.pow(pos.coords.longitude - s.lng, 2)) * 111;
-                if (dist < 5.0) saveData(id);
-                else document.getElementById('status-msg').innerHTML = `⚠️ 距離過遠 (${dist.toFixed(1)}km)<br><span class="text-[10px] text-red-700 opacity-70">去國漫館紅磚牆附近找找看！</span>`;
-            }, () => alert("請開啟定位權限以採集數據。"));
-        }
-
-        function saveData(id) {
-            let collection = JSON.parse(localStorage.getItem('mon_dong_v2') || '{}');
-            collection[id] = true;
-            localStorage.setItem('mon_dong_v2', JSON.stringify(collection));
-            document.getElementById('status-msg').classList.add('hidden');
-            document.getElementById('btn-collect').classList.add('hidden');
-            document.getElementById('success-extra').classList.remove('hidden');
+            const params = new URLSearchParams(window.location.search);
+            const target = params.get('species');
+            
+            // 優先渲染圖鑑清單
             renderGrid();
-        }
 
-        function renderGrid() {
-            const saved = JSON.parse(localStorage.getItem('mon_dong_v2') || '{}');
-            const grid = document.getElementById('collection-grid');
-            grid.innerHTML = '';
-            let count = 0;
-            Object.keys(speciesDB).forEach(key => {
-                const isFound = saved[key];
-                if (isFound) count++;
-                const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-3xl shadow-sm border border-stone-100 text-center";
-                card.onclick = () => { if(isFound) window.location.search = `?species=${key}`; };
-                card.innerHTML = `
-                    <div class="h-24 flex items-center justify-center mb-2">
-                        <img src="${speciesDB[key].img}" class="grid-img w-full h-full object-contain ${isFound ? 'unlocked' : ''}">
-                    </div>
-                    <div class="text-[10px] font-bold text-stone-300 uppercase tracking-tighter">${isFound ? speciesDB[key].name : 'Unknown'}</div>
-                `;
-                grid.appendChild(card);
-            });
-            document.getElementById('progress').innerText = `${count} / ${Object.keys(speciesDB).length}`;
-        }
-        init();
-    </script>
+            // 如果有掃碼目標，顯示掃碼介面
+            if (target && speciesDB[target]) {
+                document.getElementById('collection-view').classList.add('hidden');
+                showScanView(target);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function showScanView(id) {
+        const s = speciesDB[id];
+        document.getElementById('scan-view').classList.remove('hidden');
+        document.getElementById('species-name').innerText = s.name;
+        document.getElementById('species-latin').innerText = s.latin;
+        
+        // 修正圖片路徑：如果是本地檔案就加 BASE_URL，如果是網址就直接用
+        document.getElementById('species-img').src = s.img.startsWith('http') ? s.img : BASE_URL + s.img;
+        document.getElementById('species-info').innerText = s.info;
+        document.getElementById('comic-link').href = s.comic.startsWith('http') ? s.comic : BASE_URL + s.comic;
+        
+        if (!s.check) document.getElementById('status-msg').innerText = "✨ 此處生物信號強烈，可直接收錄。";
+    }
+
+    function checkLocation() {
+        const id = new URLSearchParams(window.location.search).get('species') || 'psilotum';
+        const s = speciesDB[id];
+        if (!s.check) return saveData(id);
+
+        navigator.geolocation.getCurrentPosition((pos) => {
+            // 計算距離 (公里)
+            const dist = Math.sqrt(Math.pow(pos.coords.latitude - s.lat, 2) + Math.pow(pos.coords.longitude - s.lng, 2)) * 111;
+            
+            if (dist < 5.0) { // 測試期間放寬到 5 公里
+                saveData(id);
+            } else {
+                document.getElementById('status-msg').innerHTML = `⚠️ 距離過遠 (${dist.toFixed(1)}km)<br><span class="text-[10px] text-red-700 opacity-70">請靠近國漫館紅磚牆附近！</span>`;
+            }
+        }, () => alert("請開啟定位權限"));
+    }
+
+    function saveData(id) {
+        let collection = JSON.parse(localStorage.getItem('mon_dong_v2') || '{}');
+        collection[id] = true;
+        localStorage.setItem('mon_dong_v2', JSON.stringify(collection));
+        
+        document.getElementById('status-msg').innerHTML = "💚 捕捉成功！數據已寫入圖鑑。";
+        document.getElementById('btn-collect').classList.add('hidden');
+        document.getElementById('success-extra').classList.remove('hidden');
+        renderGrid();
+    }
+
+    function renderGrid() {
+        const saved = JSON.parse(localStorage.getItem('mon_dong_v2') || '{}');
+        const grid = document.getElementById('collection-grid');
+        grid.innerHTML = '';
+        let count = 0;
+        
+        Object.keys(speciesDB).forEach(key => {
+            const isFound = saved[key];
+            if (isFound) count++;
+            const s = speciesDB[key];
+            const card = document.createElement('div');
+            card.className = "bg-white p-4 rounded-3xl shadow-sm border border-stone-100 text-center cursor-pointer";
+            
+            // 點擊已解鎖的格子可以回去看內容
+            card.onclick = () => { if(isFound) window.location.search = `?species=${key}`; };
+            
+            const imgSrc = s.img.startsWith('http') ? s.img : BASE_URL + s.img;
+            
+            card.innerHTML = `
+                <div class="h-24 flex items-center justify-center mb-2">
+                    <img src="${imgSrc}" class="grid-img w-full h-full object-contain ${isFound ? 'unlocked' : ''}">
+                </div>
+                <div class="text-[10px] font-bold ${isFound ? 'text-green-800' : 'text-stone-300'} uppercase tracking-tighter">
+                    ${isFound ? s.name : 'Unknown'}
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        document.getElementById('progress').innerText = `${count} / ${Object.keys(speciesDB).length}`;
+    }
+    init();
+</script>
 </body>
 </html>
