@@ -1,0 +1,12 @@
+json{
+  "psilotum": {
+    "name": "松葉蕨",
+    "latin": "Psilotum nudum",
+    "check": true,
+    "lat": 24.1392,
+    "lng": 120.6657,
+    "img": "psilotum_char.png.JPG",
+    "comic": "psilotum_com.png.png",
+    "infoFile": "psilotum_info.txt"
+  }
+}
