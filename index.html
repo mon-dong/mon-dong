@@ -18,20 +18,25 @@
 </head>
 <body class="pb-10 min-h-screen">
 
-    <header id="main-header" class="text-center py-10">
+    <header class="text-center py-10">
         <div class="inline-block bg-[#2d4a22] text-white px-3 py-1 rounded-full text-[10px] tracking-widest mb-2 uppercase">Field Discovery</div>
         <h1 class="serif text-4xl italic tracking-tighter">萌動角落《萌動力》</h1>
     </header>
 
+    <!-- 掃碼捕捉區 -->
     <div id="scan-view" class="hidden max-w-sm mx-auto p-6 text-center">
         <h2 id="species-name" class="serif text-3xl mb-1">---</h2>
-        <p id="species-latin" class="text-xs italic text-stone-400 mb-6 font-serif">Loading...</p>
-        <div class="bg-white bezel p-8 mb-6 shadow-xl flex items-center justify-center"><img id="species-img" src="" class="w-48 h-48 object-contain"></div>
+        <div class="bg-white bezel p-8 mb-6 shadow-xl flex items-center justify-center">
+            <img id="species-img" src="" class="w-48 h-48 object-contain">
+        </div>
         <div id="status-msg" class="text-xs mb-8 text-stone-500 bg-white/50 p-4 rounded-xl border border-dashed border-stone-300">🔍 偵測中...</div>
         <button id="btn-collect" onclick="checkLocation()" class="w-full bg-[#2d4a22] text-white py-4 rounded-full font-bold shadow-lg">收錄數據 (COLLECT)</button>
-        <div id="success-btn-area" class="hidden"><button onclick="openReaderFromParams()" class="w-full bg-green-800 text-white py-4 rounded-2xl font-bold text-sm shadow-md">📖 閱讀科普漫畫 (下滑看內容)</button></div>
+        <div id="success-btn-area" class="hidden">
+            <button onclick="openReaderFromParams()" class="w-full bg-green-800 text-white py-4 rounded-2xl font-bold text-sm shadow-md">📖 閱讀科普漫畫 (下滑看內容)</button>
+        </div>
     </div>
 
+    <!-- 長條閱讀器 -->
     <div id="reading-overlay" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
         <button onclick="closeReader()" class="fixed top-6 right-6 bg-black/60 text-white w-10 h-10 rounded-full z-50 flex items-center justify-center font-bold">✕</button>
         <div class="flex flex-col items-center">
@@ -43,9 +48,10 @@
         </div>
     </div>
 
+    <!-- 圖鑑主頁 -->
     <div id="collection-view" class="max-w-md mx-auto px-6">
         <div class="flex justify-between items-end mb-6 border-b-2 border-[#2d4a22] pb-2 text-xl font-bold italic">
-            <h3 class="serif">我的萌動圖鑑</h3>
+            <h3 class="serif text-xl">我的圖鑑</h3>
             <span id="progress-text" class="text-xs bg-[#2d4a22] text-white px-2 py-0.5 rounded">0/0</span>
         </div>
         <div id="collection-grid" class="grid grid-cols-2 gap-4"></div>
@@ -55,7 +61,6 @@
         const LIFF_ID = "2009975666-bAjGYenl";
         const GITHUB_URL = "https://github.io";
 
-        // 直接把資料寫在這裡，避開讀取 data.json 失敗的風險
         const speciesDB = {
             "psilotum": { 
                 name: "松葉蕨", latin: "Psilotum nudum", check: true, lat: 24.1392, lng: 120.6657, 
@@ -75,7 +80,6 @@
         async function initLIFF() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) { liff.login(); return; }
                 renderGrid();
                 const target = new URLSearchParams(window.location.search).get('species');
                 if (target && speciesDB[target]) {
@@ -89,7 +93,6 @@
             const s = speciesDB[id];
             document.getElementById('scan-view').classList.remove('hidden');
             document.getElementById('species-name').innerText = s.name;
-            document.getElementById('species-latin').innerText = s.latin;
             document.getElementById('species-img').src = GITHUB_URL + s.img;
         }
 
