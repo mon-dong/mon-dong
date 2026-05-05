@@ -1,12 +1,22 @@
-json{
+{
   "psilotum": {
     "name": "松葉蕨",
     "latin": "Psilotum nudum",
-    "check": true,
+    "cat": "遠古類群",
     "lat": 24.1392,
     "lng": 120.6657,
+    "check": true,
     "img": "psilotum_char.png.JPG",
     "comic": "psilotum_com.png.png",
     "infoFile": "psilotum_info.txt"
+  },
+  "apis": {
+    "name": "西洋蜂",
+    "latin": "Apis mellifera",
+    "cat": "社會昆蟲",
+    "check": false,
+    "img": "https://placeholder.com",
+    "comic": "https://placeholder.com",
+    "infoFile": "apis_info.txt"
   }
 }
