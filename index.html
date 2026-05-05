@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>萌動角落</title>
-    <!-- 1. 確保 SDK 放在最前面 -->
+    <!-- 確保 SDK 放在最前面 -->
     <script src="https://line-scdn.net"></script>
     <script src="https://tailwindcss.com"></script>
     <style>
@@ -22,7 +22,6 @@
         <h1 class="serif text-4xl italic tracking-tighter">萌動角落《萌動力》</h1>
     </header>
 
-    <!-- 捕捉視窗 -->
     <div id="scan-view" class="hidden max-w-sm mx-auto p-6 text-center">
         <h2 id="species-name" class="serif text-3xl mb-1">---</h2>
         <div class="bg-white border-2 border-[#2d4a22] rounded-[32px] p-8 mb-6 shadow-xl flex items-center justify-center">
@@ -41,7 +40,6 @@
         </div>
     </div>
 
-    <!-- 長條閱讀器 -->
     <div id="reading-overlay" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
         <button onclick="closeReader()" class="fixed top-6 right-6 bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold">✕</button>
         <div class="flex flex-col items-center">
@@ -53,7 +51,6 @@
         </div>
     </div>
 
-    <!-- 圖鑑主頁 -->
     <div id="collection-view" class="max-w-md mx-auto px-6">
         <div class="flex justify-between items-end mb-6 border-b-2 border-[#2d4a22] pb-2 font-bold">
             <h3 class="serif text-xl italic">我的圖鑑</h3>
@@ -81,12 +78,11 @@
             }
         };
 
-        // 2. 強化版初始化：確保 liff 已定義
+        // 循環檢查直到 LIFF 下載完成
         function startApp() {
             if (typeof liff !== 'undefined') {
                 initLIFF();
             } else {
-                console.log("等待 LIFF SDK...");
                 setTimeout(startApp, 100);
             }
         }
@@ -104,9 +100,7 @@
                         showScanView(target);
                     }
                 }
-            } catch (err) {
-                console.error("LIFF 初始化失敗", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function showScanView(id) {
@@ -175,9 +169,7 @@
             document.getElementById('progress-text').innerText = count + "/2";
         }
 
-        // 啟動程式
         startApp();
     </script>
 </body>
 </html>
-
