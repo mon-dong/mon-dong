@@ -3,64 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>萌動圖鑑</title>
+    <title>萌動角落圖鑑</title>
     <script src="https://line-scdn.net"></script>
     <script src="https://tailwindcss.com"></script>
+    <style>
+        @import url('https://googleapis.com');
+        body { background: #fdfaf5; font-family: sans-serif; }
+        .serif { font-family: 'Noto Serif TC', serif; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .char-float { animation: floating 3s ease-in-out infinite; }
+        @keyframes floating { 
+            0% { transform: translateY(0px); } 
+            50% { transform: translateY(-10px); } 
+            100% { transform: translateY(0px); } 
+        }
+        .grid-img { filter: grayscale(100%) brightness(80%); opacity: 0.4; transition: 0.5s; }
+        .grid-img.unlocked { filter: grayscale(0%) brightness(100%); opacity: 1; }
+    </style>
 </head>
-<body class="bg-stone-100 min-h-screen p-4 font-sans text-stone-800">
-    <header class="text-center py-6">
-        <h1 class="text-2xl font-bold tracking-tighter text-green-900">🌿 萌動角落圖鑑</h1>
-        <p class="text-xs text-stone-500 mt-1 uppercase tracking-widest italic">Digital Biological Encyclopedia</p>
-    </header>
+<body class="pb-20 text-stone-800">
 
-    <!-- 掃碼顯示區 -->
-    <div id="scan-view" class="hidden max-w-sm mx-auto bg-white rounded-3xl shadow-xl p-8 mb-8 text-center border-2 border-green-800">
-        <div id="species-category" class="text-[10px] bg-green-800 text-white px-3 py-1 rounded-full inline-block mb-3">生物載入中</div>
-        <h2 id="species-name" class="text-3xl font-black mb-1 text-stone-900">讀取中...</h2>
-        <p id="species-latin" class="text-sm italic text-stone-400 mb-6 font-serif"></p>
-        <div id="status-msg" class="text-sm p-4 bg-stone-50 rounded-xl border border-stone-200 mb-6 leading-relaxed">
-            🔍 偵測到微弱生物訊號...
-        </div>
-        <button id="btn-collect" onclick="checkLocation()" class="w-full bg-green-900 text-white py-4 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-transform">
-            立即捕捉
-        </button>
+    <div id="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <div class="text-stone-400 text-sm animate-pulse tracking-widest">LOADING...</div>
     </div>
 
-    <!-- 我的圖鑑區 -->
-    <div class="max-w-md mx-auto">
-        <h3 class="font-bold text-sm mb-4 flex items-center">
-            <span class="w-4 h-4 bg-green-800 rounded-full mr-2"></span> 我的採集進度
-        </h3>
+    <!-- 掃碼顯示區 -->
+    <div id="scan-view" class="hidden min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <div class="mb-2 text-[10px] tracking-[0.3em] font-bold text-green-800 opacity-60 uppercase">Field Discovery</div>
+        <h1 id="species-name" class="serif text-4xl mb-1">---</h1>
+        <p id="species-latin" class="text-xs italic text-stone-400 mb-8"></p>
+        
+        <div class="relative w-64 h-64 mb-10">
+            <div class="absolute inset-0 bg-green-100 rounded-full scale-110 blur-2xl opacity-50"></div>
+            <img id="species-img" src="" class="char-float relative z-10 w-full h-full object-contain">
+        </div>
+
+        <div id="status-msg" class="glass border border-white p-4 rounded-2xl text-sm mb-6 max-w-xs shadow-sm">
+            🔍 正在分析環境數據...
+        </div>
+
+        <button id="btn-collect" onclick="checkLocation()" class="bg-stone-900 text-white px-10 py-4 rounded-full font-bold text-sm tracking-widest shadow-xl active:scale-95 transition-all">
+            收錄數據 (COLLECT)
+        </button>
+
+        <!-- 成功後顯示的科普區 -->
+        <div id="success-extra" class="hidden mt-8 w-full max-w-sm animate-fadeIn">
+            <div class="bg-white p-6 rounded-3xl text-left shadow-sm border border-stone-100 mb-4">
+                <h4 class="font-bold text-green-800 text-xs mb-2">科普筆記</h4>
+                <p id="species-info" class="text-sm leading-relaxed text-stone-600"></p>
+            </div>
+            <a id="comic-link" href="#" class="block w-full bg-green-700 text-white py-4 rounded-2xl font-bold text-sm shadow-md text-center">
+                📖 閱讀改編漫畫
+            </a>
+        </div>
+    </div>
+
+    <!-- 圖鑑主頁 -->
+    <div id="collection-view" class="p-6">
+        <header class="flex justify-between items-end mb-10">
+            <div>
+                <div class="text-[10px] tracking-widest text-stone-400 font-bold uppercase mb-1">Archive</div>
+                <h2 class="serif text-3xl">萌動圖鑑</h2>
+            </div>
+            <div id="progress" class="text-xs font-bold bg-stone-100 px-3 py-1 rounded-full">0 / 10</div>
+        </header>
+        
         <div id="collection-grid" class="grid grid-cols-2 gap-4"></div>
     </div>
 
     <script>
         const LIFF_ID = "2009975666-bAjGYenl";
         const speciesDB = {
-            "psilotum": { name: "松葉蕨", latin: "Psilotum nudum", cat: "遠古類群", check: true, lat: 24.1392, lng: 120.6657, hint: "牠躲在國漫館的紅磚牆縫中！" },
-            "apis": { name: "西洋蜂", latin: "Apis mellifera", cat: "社會昆蟲", check: false },
-            "termites": { name: "台灣土白蟻", latin: "Odontotermes formosanus", cat: "地下農夫", check: false },
-            "spider": { name: "安德遜蠅虎", latin: "Hasarius adansoni", cat: "跳躍獵人", check: false },
-            "dandelion": { name: "西洋蒲公英", latin: "Taraxacum officinale", cat: "冒險種子", check: true, lat: 24.1501, lng: 120.6644, hint: "常見於科博館周邊草坪。" },
-            "termite2": { name: "新渡戶歪白蟻", latin: "Pericapritermes nitobei", cat: "彈指兵蟻", check: false },
-            "barringtonia": { name: "穗花棋盤腳", latin: "Barringtonia racemosa", cat: "夏夜煙火", check: true, lat: 24.1555, lng: 120.6601, hint: "校園水池邊才看得到牠開花。" },
-            "ficus": { name: "榕樹", latin: "Ficus microcarpa", cat: "都市守護者", check: false },
-            "wasp": { name: "榕果小蜂", latin: "Eupristina verticillata", cat: "絕對共生", check: true, lat: 24.1450, lng: 120.6620, hint: "就在榕樹的隱頭花序裡！" },
-            "bougainvillea": { name: "九重葛", latin: "Bougainvillea spectabilis", cat: "多彩苞片", check: false }
+            "psilotum": { 
+                name: "松葉蕨", latin: "Psilotum nudum", check: true, lat: 24.1392, lng: 120.6657, 
+                img: "psilotum_char.png.JPG", 
+                comic: "psilotum_com.png.png",
+                info: "我是最原始的維管束植物，長得像綠色掃帚，其實我沒有真正的根和葉子，完全靠地下莖吸收水分喔！"
+            },
+            "apis": { name: "西洋蜂", latin: "Apis mellifera", check: false, img: "https://placeholder.com", comic: "#", info: "西洋蜂是社會性昆蟲，是都市花圃中最常見的授粉者。" }
+            // 其他 8 隻請依此類推...
         };
 
         async function init() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const target = urlParams.get('species');
-                    if (target && speciesDB[target]) showScanView(target);
-                    renderGrid();
+                if (!liff.isLoggedIn()) liff.login();
+                document.getElementById('loading').remove();
+                
+                const target = new URLSearchParams(window.location.search).get('species');
+                if (target && speciesDB[target]) {
+                    document.getElementById('collection-view').classList.add('hidden');
+                    showScanView(target);
                 }
-            } catch (e) { console.log(e); }
+                renderGrid();
+            } catch (e) { console.error(e); }
         }
 
         function showScanView(id) {
@@ -68,40 +104,55 @@
             document.getElementById('scan-view').classList.remove('hidden');
             document.getElementById('species-name').innerText = s.name;
             document.getElementById('species-latin').innerText = s.latin;
-            document.getElementById('species-category').innerText = s.cat;
-            if (!s.check) document.getElementById('status-msg').innerText = "✨ 此物種訊號強烈，可直接捕捉！";
+            document.getElementById('species-img').src = s.img;
+            document.getElementById('species-info').innerText = s.info;
+            document.getElementById('comic-link').href = s.comic;
+            
+            if (!s.check) document.getElementById('status-msg').innerText = "✨ 此處生物信號強烈，可直接收錄。";
         }
 
         function checkLocation() {
             const id = new URLSearchParams(window.location.search).get('species') || 'psilotum';
             const s = speciesDB[id];
-            if (!s.check) { saveData(id); return; }
+            if (!s.check) return saveData(id);
+
             navigator.geolocation.getCurrentPosition((pos) => {
                 const dist = Math.sqrt(Math.pow(pos.coords.latitude - s.lat, 2) + Math.pow(pos.coords.longitude - s.lng, 2)) * 111;
                 if (dist < 0.2) saveData(id);
-                else document.getElementById('status-msg').innerHTML = `⚠️ 距離太遠 (${dist.toFixed(1)}km)<br><span class="text-red-700 text-xs">${s.hint}</span>`;
-            }, () => alert("請開啟定位權限"));
+                else document.getElementById('status-msg').innerHTML = `⚠️ 距離過遠 (${dist.toFixed(1)}km)<br><span class="text-[10px] text-red-700 opacity-70">去國漫館紅磚牆附近找找看！</span>`;
+            }, () => alert("請開啟定位權限以採集數據。"));
         }
 
         function saveData(id) {
-            let collection = JSON.parse(localStorage.getItem('mon_dong_v1') || '{}');
+            let collection = JSON.parse(localStorage.getItem('mon_dong_v2') || '{}');
             collection[id] = true;
-            localStorage.setItem('mon_dong_v1', JSON.stringify(collection));
-            document.getElementById('status-msg').innerHTML = "💚 捕捉成功！已收錄至圖鑑。";
-            setTimeout(() => location.href = window.location.pathname, 1500);
+            localStorage.setItem('mon_dong_v2', JSON.stringify(collection));
+            document.getElementById('status-msg').classList.add('hidden');
+            document.getElementById('btn-collect').classList.add('hidden');
+            document.getElementById('success-extra').classList.remove('hidden');
+            renderGrid();
         }
 
         function renderGrid() {
-            const saved = JSON.parse(localStorage.getItem('mon_dong_v1') || '{}');
+            const saved = JSON.parse(localStorage.getItem('mon_dong_v2') || '{}');
             const grid = document.getElementById('collection-grid');
             grid.innerHTML = '';
+            let count = 0;
             Object.keys(speciesDB).forEach(key => {
                 const isFound = saved[key];
+                if (isFound) count++;
                 const card = document.createElement('div');
-                card.className = `p-4 rounded-2xl border ${isFound ? 'bg-white border-green-200' : 'bg-stone-200 opacity-50 border-transparent'} text-center`;
-                card.innerHTML = `<div class="text-2xl mb-2">${isFound ? '💎' : '❓'}</div><div class="text-xs font-bold">${isFound ? speciesDB[key].name : '未解鎖'}</div>`;
+                card.className = "bg-white p-4 rounded-3xl shadow-sm border border-stone-100 text-center";
+                card.onclick = () => { if(isFound) window.location.search = `?species=${key}`; };
+                card.innerHTML = `
+                    <div class="h-24 flex items-center justify-center mb-2">
+                        <img src="${speciesDB[key].img}" class="grid-img w-full h-full object-contain ${isFound ? 'unlocked' : ''}">
+                    </div>
+                    <div class="text-[10px] font-bold text-stone-300 uppercase tracking-tighter">${isFound ? speciesDB[key].name : 'Unknown'}</div>
+                `;
                 grid.appendChild(card);
             });
+            document.getElementById('progress').innerText = `${count} / ${Object.keys(speciesDB).length}`;
         }
         init();
     </script>
