@@ -10,42 +10,49 @@
         @import url('https://googleapis.com');
         body { background: #fdfaf5; color: #2d4a22; font-family: sans-serif; }
         .serif { font-family: 'Noto Serif TC', serif; }
+        .bezel { border: 3px solid #2d4a22; border-radius: 32px; background: white; }
         .grid-img { filter: grayscale(100%) opacity(0.2); width: 100%; height: 100%; object-fit: contain; transition: 0.5s; }
         .grid-img.unlocked { filter: grayscale(0%) opacity(1); }
         .hidden { display: none !important; }
     </style>
 </head>
-<body class="pb-10 min-h-screen">
+<body class="pb-20 min-h-screen">
+
     <header class="text-center py-10">
-        <h1 class="serif text-4xl italic tracking-tighter text-[#2d4a22]">萌動角落《萌動力》</h1>
+        <div class="inline-block bg-[#2d4a22] text-white px-3 py-1 rounded-full text-[10px] tracking-widest mb-2 uppercase">Field Discovery</div>
+        <h1 class="serif text-4xl italic tracking-tighter">萌動角落《萌動力》</h1>
     </header>
 
+    <!-- 捕捉介面 -->
     <div id="scan-view" class="hidden max-w-sm mx-auto p-6 text-center">
-        <h2 id="species-name" class="serif text-3xl mb-1">載入中...</h2>
-        <div class="bg-white border-2 border-[#2d4a22] rounded-[32px] p-8 mb-6 shadow-xl flex items-center justify-center min-h-[200px]">
-            <img id="species-img" src="" class="w-48 h-48 object-contain">
+        <h2 id="species-name" class="serif text-3xl mb-1">---</h2>
+        <div class="bg-white bezel p-8 mb-6 shadow-xl flex items-center justify-center min-h-[250px]">
+            <img id="species-img" src="" class="w-full h-48 object-contain">
         </div>
-        <div id="status-msg" class="text-xs mb-8 text-stone-500 bg-white/50 p-4 rounded-xl border border-dashed border-stone-300">🔍 偵測數據中...</div>
-        <button id="btn-collect" onclick="checkLocation()" class="w-full bg-[#2d4a22] text-white py-4 rounded-full font-bold shadow-lg">收錄數據 (COLLECT)</button>
+        <div id="status-msg" class="text-xs mb-8 text-stone-500 bg-white/50 p-4 rounded-xl border border-dashed border-stone-300">🔍 正在辨識物種...</div>
+        <button id="btn-collect" onclick="checkLocation()" class="w-full bg-[#2d4a22] text-white py-4 rounded-full font-bold shadow-lg active:scale-95 transition-all">收錄數據 (COLLECT)</button>
         <div id="success-btn-area" class="hidden">
-            <button onclick="openReader()" class="w-full bg-green-800 text-white py-4 rounded-2xl font-bold text-sm shadow-md">📖 閱讀科普漫畫</button>
+            <button onclick="openReader()" class="w-full bg-green-800 text-white py-4 rounded-2xl font-bold text-sm shadow-md">📖 閱讀科普漫畫 (下滑看內容)</button>
         </div>
     </div>
 
+    <!-- 長條閱讀器 -->
     <div id="reading-overlay" class="hidden fixed inset-0 bg-white z-50 overflow-y-auto">
         <button onclick="closeReader()" class="fixed top-6 right-6 bg-black/60 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold">✕</button>
         <div class="flex flex-col items-center">
             <img id="comic-full-img" src="" class="w-full h-auto">
             <div class="p-10 bg-[#fdfaf5] w-full border-t-4 border-[#2d4a22]">
                 <h2 id="reader-species-name" class="serif text-3xl mb-6">---</h2>
-                <div id="reader-species-info" class="text-stone-700 leading-loose text-lg font-medium"></div>
+                <div id="reader-species-info" class="text-stone-700 leading-loose text-lg space-y-6 font-medium"></div>
+                <div class="mt-20 py-10 text-center border-t border-stone-200 opacity-30 text-[10px]">萌動角落計畫 © 科學漫畫工作室</div>
             </div>
         </div>
     </div>
 
+    <!-- 圖鑑主頁 -->
     <div id="collection-view" class="max-w-md mx-auto px-6">
-        <div class="flex justify-between items-end mb-6 border-b-2 border-[#2d4a22] pb-2 font-bold italic">
-            <h3 class="serif text-xl">我的圖鑑</h3>
+        <div class="flex justify-between items-end mb-6 border-b-2 border-[#2d4a22] pb-2 font-bold italic text-xl">
+            <h3 class="serif">我的萌動圖鑑</h3>
             <span id="progress-text" class="text-xs bg-[#2d4a22] text-white px-2 py-0.5 rounded">0/10</span>
         </div>
         <div id="collection-grid" class="grid grid-cols-2 gap-4"></div>
@@ -53,10 +60,20 @@
 
     <script>
         const GITHUB_URL = "https://github.io";
+
         const speciesDB = {
-            "psilotum": { name: "松葉蕨", latin: "Psilotum nudum", check: true, lat: 24.1392, lng: 120.6657, img: "psilotum_char.png.JPG", comic: "psilotum_com.png.png", info: "我是最原始的維管束植物，沒有真正的根和葉子。" },
-            "apis": { name: "西洋蜂", latin: "Apis mellifera", check: false, img: "apis_char.png", comic: "apis_com.png", info: "社會性昆蟲，是都市中最勤奮的粉媒者。" }
-            // ...其餘 8 隻比照辦理
+            "psilotum": { 
+                name: "松葉蕨", latin: "Psilotum nudum", check: true, lat: 24.1392, lng: 120.6657, 
+                img: "psilotum_char.png.JPG", 
+                comic: "psilotum_com.png.png",
+                info: "我是最原始的維管束植物，長得像綠色掃帚。我沒有真正的根和葉子，完全靠地下莖吸收水分喔！也因為長得像掃帚，所以又被稱為「鳥巢蕨」或「鐵掃帚」。"
+            },
+            "apis": { 
+                name: "西洋蜂", latin: "Apis mellifera", check: false,
+                img: "apis_char.png", 
+                comic: "apis_com.png",
+                info: "社會性昆蟲，是都市中最勤奮的粉媒者。我們腳上有「花粉籃」，會把收集到的花粉團帶回巢穴喔！"
+            }
         };
 
         function init() {
@@ -72,18 +89,19 @@
             const s = speciesDB[id];
             document.getElementById('scan-view').classList.remove('hidden');
             document.getElementById('species-name').innerText = s.name;
+            document.getElementById('species-latin').innerText = s.latin;
             document.getElementById('species-img').src = GITHUB_URL + s.img;
         }
 
         function checkLocation() {
-            const id = new URLSearchParams(window.location.search).get('species');
+            const id = new URLSearchParams(window.location.search).get('species') || 'psilotum';
             const s = speciesDB[id];
             if (!s.check) return saveData(id);
             navigator.geolocation.getCurrentPosition((pos) => {
-                const dist = Math.sqrt(Math.pow(pos.coords.latitude-s.lat,2)+Math.pow(pos.coords.longitude-s.lng,2))*111;
+                const dist = Math.sqrt(Math.pow(pos.coords.latitude - s.lat, 2) + Math.pow(pos.coords.longitude - s.lng, 2)) * 111;
                 if (dist < 5.0) saveData(id);
-                else document.getElementById('status-msg').innerText = "⚠️ 距離過遠 ("+dist.toFixed(1)+"km)";
-            }, () => saveData(id)); // 測試期若定位失敗也讓它成功
+                else document.getElementById('status-msg').innerHTML = `⚠️ 距離過遠 (${dist.toFixed(1)}km)<br>請靠近指定地點！`;
+            }, () => alert("請開啟定位權限"));
         }
 
         function saveData(id) {
@@ -92,20 +110,25 @@
             localStorage.setItem('mon_dong_v2', JSON.stringify(collection));
             document.getElementById('success-btn-area').classList.remove('hidden');
             document.getElementById('btn-collect').classList.add('hidden');
-            document.getElementById('status-msg').innerText = "💚 捕捉成功！";
+            document.getElementById('status-msg').innerHTML = "💚 捕捉成功！數據已寫入圖鑑。";
             renderGrid();
         }
 
         function openReader() {
-            const id = new URLSearchParams(window.location.search).get('species');
+            const id = new URLSearchParams(window.location.search).get('species') || 'psilotum';
             const s = speciesDB[id];
             document.getElementById('comic-full-img').src = GITHUB_URL + s.comic;
             document.getElementById('reader-species-name').innerText = s.name;
-            document.getElementById('reader-species-info').innerText = s.info;
+            document.getElementById('reader-species-info').innerHTML = s.info.replace(/\n/g, '<br>');
             document.getElementById('reading-overlay').classList.remove('hidden');
+            document.getElementById('reading-overlay').scrollTop = 0;
+            document.body.style.overflow = 'hidden';
         }
 
-        function closeReader() { document.getElementById('reading-overlay').classList.add('hidden'); }
+        function closeReader() {
+            document.getElementById('reading-overlay').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
 
         function renderGrid() {
             const saved = JSON.parse(localStorage.getItem('mon_dong_v2') || '{}');
@@ -117,12 +140,29 @@
                 if (isFound) count++;
                 const s = speciesDB[key];
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-3xl border border-stone-100 text-center";
-                card.innerHTML = `<div class="h-24 flex items-center justify-center mb-2"><img src="${GITHUB_URL + s.img}" class="grid-img ${isFound ? 'unlocked' : ''}"></div><div class="text-[10px] font-bold ${isFound ? 'text-[#2d4a22]' : 'text-stone-300'} uppercase">${isFound ? s.name : '??'}</div>`;
+                card.className = "bg-white p-4 rounded-3xl border border-stone-100 text-center cursor-pointer";
+                card.onclick = () => { if(isFound) openReaderParam(key); };
+                card.innerHTML = `
+                    <div class="h-24 flex items-center justify-center mb-2">
+                        <img src="${GITHUB_URL + s.img}" class="grid-img ${isFound ? 'unlocked' : ''}">
+                    </div>
+                    <div class="text-[10px] font-bold ${isFound ? 'text-[#2d4a22]' : 'text-stone-300'} uppercase">
+                        ${isFound ? s.name : 'Unknown'}
+                    </div>
+                `;
                 grid.appendChild(card);
             });
             document.getElementById('progress-text').innerText = `${count}/10`;
         }
+
+        function openReaderParam(id) {
+            const s = speciesDB[id];
+            document.getElementById('comic-full-img').src = GITHUB_URL + s.comic;
+            document.getElementById('reader-species-name').innerText = s.name;
+            document.getElementById('reader-species-info').innerHTML = s.info.replace(/\n/g, '<br>');
+            document.getElementById('reading-overlay').classList.remove('hidden');
+        }
+
         init();
     </script>
 </body>
